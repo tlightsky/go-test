@@ -1,0 +1,289 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <meta
+      name="viewport"
+      content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no"
+    />
+
+    <title>Go集成测试</title>
+
+    <link rel="stylesheet" href="css/reveal.css" />
+    <link rel="stylesheet" href="css/theme/league.css" id="theme" />
+    <!-- <link rel="stylesheet" href="css/theme/black.css"> -->
+
+    <!-- Theme used for syntax highlighting of code -->
+    <link rel="stylesheet" href="lib/css/zenburn.css" />
+
+    <!-- Printing and PDF exports -->
+    <script>
+      var link = document.createElement("link");
+      link.rel = "stylesheet";
+      link.type = "text/css";
+      link.href = window.location.search.match(/print-pdf/gi)
+        ? "css/print/pdf.css"
+        : "css/print/paper.css";
+      document.getElementsByTagName("head")[0].appendChild(link);
+    </script>
+    <style>
+      .normal-p {
+        text-align: left;
+        text-indent: 2em;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="reveal">
+      <div class="slides">
+        <section>
+          <h2>Go集成测试</h2>
+          <span style="margin-left: 500px;">by 王超 2019-07</span>
+        </section>
+
+        <section data-markdown>
+          <script type="text/template">
+            ## What 是什么
+            ## Why 为什么
+            ## How 怎么做
+          </script>
+        </section>
+
+        <section>
+          <section>
+            <h2>集成测试是什么？</h2>
+          </section>
+        </section>
+
+        <section>
+          <section>
+            <h2>集成测试是什么</h2>
+            <p class="fragment normal-p">
+              对程序模块采用一次性或增值方式组装起来，对系统的接口进行正确性检验的测试工作。
+            </p>
+            <p class="fragment normal-p">
+              一般在单元测试之后、系统测试之前进行。实践表明，有时模块虽然可以单独工作，但是并不能保证组装起来也可以同时工作。
+            </p>
+            <span style="margin-left: 500px;" class="fragment"
+              >-- Wikipedia</span
+            >
+          </section>
+          <section>
+            <img data-src="img/integrationtesting.jpg" />
+          </section>
+        </section>
+
+        <section>
+          <h2>集成与单元测试的不同</h2>
+          <section data-markdown></section>
+          <section data-markdown>
+            <script type="text/template">
+              <h3>什么是单元测试</h3>
+              <p class="fragment normal-p">针对程序模块（软件设计的最小单位）来进行正确性检验的测试工作</p>
+            </script>
+          </section>
+          <section>
+            <p class="fragment normal-p">是否有外部依赖</p>
+            <p class="fragment normal-p">是否涉及多个模块</p>
+          </section>
+        </section>
+
+        <section>
+          <h2>为什么集成测试</h2>
+          <section></section>
+          <section>
+            <img data-src="img/integration_test.gif" />
+          </section>
+          <section>
+            <ul>
+              <li>单元测试无法发现的问题</li>
+              <li>添加新功能或修复bug后完成回归测试，code更加健壮</li>
+              <li>保证业务逻辑与需求一致，TDD模式</li>
+              <li>
+                微服务中持续集成<a href="http://dockone.io/article/3660"
+                  >解决在一起</a
+                >的问题，集成测试可以告诉在一起行不行，好不好
+              </li>
+            </ul>
+          </section>
+        </section>
+        <section>
+          <h3>回归测试与重复测试的不同</h3>
+          <p class="fragment normal-p"></p>
+        </section>
+
+        <section>
+          <h2>怎么做集成测试</h2>
+        </section>
+
+        <section>
+          <section>
+            <h2>处理外部依赖</h2>
+            <ul>
+              <li>MySQL</li>
+              <li>Redis</li>
+              <li>Wait</li>
+            </ul>
+          </section>
+          <section>
+			<h2>使用Docker</h2>			  
+            <pre><code class="yaml" data-trim contenteditable style="font-size: 18px;">
+					version: "2.1"
+					services:
+					  redis:
+						container_name: redis_testing
+						image: redis:latest
+						ports:
+						  - 63790:6379
+						environment:
+						  - TZ=Asia/Shanghai
+					  mysql:
+						container_name: mysql_testing
+						image: mysql:5.7
+						ports:
+						  - 33060:3306
+						environment:
+						  - MYSQL_DATABASE=testing
+						  - MYSQL_USER=testing
+						  - MYSQL_PASSWORD=testing-pass
+						  - MYSQL_ROOT_PASSWORD=root-pass
+						  - TZ=Asia/Shanghai
+						healthcheck:
+						  test: "/usr/bin/mysql --user=root --password=root-pass --execute \"SHOW DATABASES;\""
+						  interval: 2s
+						  timeout: 30s
+						  retries: 10
+					  wait:
+						image: busybox
+						command: "tail -f /dev/null"
+						depends_on:
+						  mysql:
+							condition: service_healthy
+				</code></pre>
+          </section>
+        </section>
+        <section>
+          <h2>如何初始化数据库</h2>
+          <h3 class="fragment"><a href="https://github.com/go-testfixtures/testfixtures" target="_blank">TestFixture:使用yaml初始化MySQL数据库</a></h3>
+        </section>
+
+        <section>
+          <h2>如何模块间依赖：Mock</h2>
+          <section>
+            <pre><code class="go" data-trim contenteditable style="font-size: 18px;">
+				package teacher
+				//go:generate mockgen -source=$GOFILE -destination=../../mocks/baserpcmodel_$GOFILE -package=mocks									
+				RemoteTeacher interface {
+					GetTeacherById(teacherTd int64) (*Teacher, error)
+				}
+
+				go generate ./...
+
+				type MockRemoteTeacher struct {
+					ctrl     *gomock.Controller
+					recorder *MockRemoteTeacherMockRecorder
+				}				
+			</code></pre>
+          </section>
+          <section>
+            <pre><code class="go" data-trim contenteditable style="font-size: 18px;">
+				ctrl := gomock.NewController(suite.T())
+				teacher := &teacher.Teacher{CampusId: 10012, TeacherId: 1}	
+				xjyUserRpc = mocks.NewMockRemoteTeacher(ctrl)
+				xjyUserRpc.EXPECT().
+					GetTeacherById(gomock.Any()).
+					Return(teacher, nil).AnyTimes()
+			</code></pre>
+          </section>
+          <section>
+            <h2>不同的模拟依赖的方式</h2>
+            <ol>
+              <li>Dummy：完全不用的占位</li>
+              <li>Fake：可运行的另一个实现，内存模拟数据库</li>
+              <li>Stub：接受参数调用，但是不会对不同参数有反馈</li>
+              <li>Mocks：实现接口，可以根据不通参数返回不同的结果</li>
+            </ol>
+          </section>
+        </section>
+        <section>
+          <h2>其他问题</h2>
+          <section>
+            <ol>
+              <li>如何不让go test ./...运行集成测试</li>
+            </ol>
+          </section>
+          <section>
+            <pre><code class="go" data-trim contenteditable style="font-size: 18px;">
+					// +build integration
+
+					go test -tags=integration -v -p 1 ./... 
+			</code></pre>
+          </section>
+        </section>
+        <section>
+          <h2>栗子</h2>
+          <ol>
+            <li><a href="https://github.com/yandex/ClickHouse/blob/master/dbms/tests/queries/0_stateless/00098_f_union_all.sql" target="_blank">Clickhouse的用例覆盖</a></li>
+            <li><a href="https://pingcap.com/blog-cn/distributed-system-test-1/" target="_blank">TiDB的测试</a></li>
+            <li><a href="https://pingcap.com/blog-cn/distributed-system-test-2/" target="_blank">错误注入</a></li>
+          </ol>
+        </section>
+        <section>
+          <h2>最佳实践</h2>
+          <section>
+            <ol>
+              <li>先主流程再分支</li>
+              <li>多测试边缘情况</li>
+              <li>把bug写成测试用例</li>
+              <li>交叉写测试</li>
+            </ol>
+          </section>
+        </section>
+        <section>
+		  <h2>Talk is cheap... </h2>
+		  <p class="fragment normal-p"><a href="https://wiki.xiaoheiban.cn/pages/viewpage.action?pageId=17826498" target="_blank">用例覆盖</a></p>
+		  <p class="fragment normal-p">浮动的打卡时间的主流程测试</p>	   
+        </section>
+
+        <section data-markdown>
+          <script type="text/template">
+            ## What 是什么
+            ## Why 为什么
+            ## How 怎么做
+          </script>
+        </section>
+
+        <section data-markdown>
+          <script type="text/template">
+            ## Q&A
+          </script>
+        </section>
+      </div>
+    </div>
+
+    <script src="lib/js/head.min.js"></script>
+    <script src="js/reveal.js"></script>
+
+    <script>
+      // More info about config & dependencies:
+      // - https://github.com/hakimel/reveal.js#configuration
+      // - https://github.com/hakimel/reveal.js#dependencies
+      Reveal.initialize({
+        history: true,
+
+        dependencies: [
+          { src: "plugin/markdown/marked.js" },
+          { src: "plugin/markdown/markdown.js" },
+          { src: "plugin/notes/notes.js", async: true },
+          {
+            src: "plugin/highlight/highlight.js",
+            async: true,
+            callback: function() {
+              hljs.initHighlightingOnLoad();
+            }
+          }
+        ]
+      });
+    </script>
+  </body>
+</html>
