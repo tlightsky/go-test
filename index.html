@@ -126,7 +126,7 @@
             </ul>
           </section>
           <section>
-			<h2>使用Docker</h2>			  
+            <h2>使用Docker</h2>
             <pre><code class="yaml" data-trim contenteditable style="font-size: 18px;">
 					version: "2.1"
 					services:
@@ -164,7 +164,13 @@
         </section>
         <section>
           <h2>如何初始化数据库</h2>
-          <h3 class="fragment"><a href="https://github.com/go-testfixtures/testfixtures" target="_blank">TestFixture:使用yaml初始化MySQL数据库</a></h3>
+          <h3 class="fragment">
+            <a
+              href="https://github.com/go-testfixtures/testfixtures"
+              target="_blank"
+              >TestFixture:使用yaml初始化MySQL数据库</a
+            >
+          </h3>
         </section>
 
         <section>
@@ -223,9 +229,27 @@
         <section>
           <h2>栗子</h2>
           <ol>
-            <li><a href="https://github.com/yandex/ClickHouse/blob/master/dbms/tests/queries/0_stateless/00098_f_union_all.sql" target="_blank">Clickhouse的用例覆盖</a></li>
-            <li><a href="https://pingcap.com/blog-cn/distributed-system-test-1/" target="_blank">TiDB的测试</a></li>
-            <li><a href="https://pingcap.com/blog-cn/distributed-system-test-2/" target="_blank">错误注入</a></li>
+            <li>
+              <a
+                href="https://github.com/yandex/ClickHouse/blob/master/dbms/tests/queries/0_stateless/00098_f_union_all.sql"
+                target="_blank"
+                >Clickhouse的用例覆盖</a
+              >
+            </li>
+            <li>
+              <a
+                href="https://pingcap.com/blog-cn/distributed-system-test-1/"
+                target="_blank"
+                >TiDB的测试</a
+              >
+            </li>
+            <li>
+              <a
+                href="https://pingcap.com/blog-cn/distributed-system-test-2/"
+                target="_blank"
+                >错误注入</a
+              >
+            </li>
           </ol>
         </section>
         <section>
@@ -233,6 +257,7 @@
           <section>
             <ol>
               <li>先主流程再分支</li>
+              <li>主要覆盖状态变更</li>
               <li>多测试边缘情况</li>
               <li>把bug写成测试用例</li>
               <li>交叉写测试</li>
@@ -240,9 +265,20 @@
           </section>
         </section>
         <section>
-		  <h2>Talk is cheap... </h2>
-		  <p class="fragment normal-p"><a href="https://wiki.xiaoheiban.cn/pages/viewpage.action?pageId=17826498" target="_blank">用例覆盖</a></p>
-		  <p class="fragment normal-p">浮动的打卡时间的主流程测试</p>	   
+          <h2>Talk is cheap...</h2>
+          <p class="fragment normal-p">
+            <a
+              href="https://wiki.xiaoheiban.cn/pages/viewpage.action?pageId=17826498"
+              target="_blank"
+              >用例覆盖</a
+            >
+          </p>
+          <p class="fragment normal-p">浮动的打卡时间的主流程测试</p>
+        </section>
+        <section>
+          <h2>Next<h2>
+          <p class="fragment normal-p">CI</p>
+          <p class="fragment normal-p">与测试的联动</p>
         </section>
 
         <section data-markdown>
